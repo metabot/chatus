@@ -18,8 +18,8 @@ import (
 type WechatStation struct {
 	processors map[string]*Processor
 	defaultProcessor *Processor
-	id string
-	token string
+	Id string
+	Token string
 	ApiAccess
 }
 
@@ -34,13 +34,14 @@ func (s *WechatStation) AddProcessor(processor *Processor) {
 
 
 func (s *WechatStation) IsValid(timestamp string, nonce string, signature string) error {
-	if signature == utils.GenerateSignature(timestamp, nonce, s.token) {
+	if signature == utils.GenerateSignature(timestamp, nonce, s.Token) {
 		return nil
 	}
 	return utils.ErrInvalidRequest
 }
 
 
+//process incoming message and generate response in string
 func (s *WechatStation) Process(in io.Reader) (string ,error) {
 	//parse to InMessage
 	msg, err := ParseInMessage(in)
@@ -51,9 +52,9 @@ func (s *WechatStation) Process(in io.Reader) (string ,error) {
 	log.Println("Parsed Message: ", msg)
 
 	if p, present := s.processors[processorKey(msg)]; present {
-		return p.handle(msg)
+		return p.Handle(msg)
 	} else {
-		return s.defaultProcessor.handle(msg)
+		return s.defaultProcessor.Handle(msg)
 	}
 }
 
@@ -67,54 +68,9 @@ func processorKey(m *InMessage) string {
 // Type:  {{InMessage.Type}}.{{InMessage.Event}}
 type Processor struct {
 	Type string
-	handle  func(*InMessage) (string, error)
+	Handle  func(*InMessage) (string, error)
 }
 
-var (
-	EchoTxtMsgProcessor = &Processor{
-	Type: "text.",
-	handle: func (i *InMessage) (string, error) {
-		//just echo
-		o, err := i.ToTxtMsg()
-		if err != nil {
-			return "", err
-		}
-
-		o.To, o.From, o.Time = i.From, i.To, time.Now().Unix()
-		return ToPullResp(o)
-	},
-}
-
-
-	ClickEventProcessor = &Processor{
-	Type: "event.CLICK",
-	handle: func (_ *InMessage) (string, error) {
-		return "", nil
-	},
-}
-
-
-
-	DefaultProcessor = &Processor {
-	Type: "*",
-	handle: func (i *InMessage) (string, error) {
-		tm := TextMessage{
-			header {
-				From: i.To,
-				To:   i.From,
-				Time: time.Now().Unix(),
-				Type: "text"},
-			"暂不支持该功能",
-		}
-		return ToPullResp(tm)
-	},
-}
-)
-
-
-////////////////
-// distributor
-////////////////
 
 type pushResp struct {
 	Errcode int    `json:"errcode"`
@@ -143,7 +99,7 @@ func (s *WechatStation) accessToken() (*accessToken, error) {
 	//build URL
 	u, err := url.Parse(s.ApiURL)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	u.Path = "cgi-bin/token"
@@ -156,15 +112,15 @@ func (s *WechatStation) accessToken() (*accessToken, error) {
 	//get access_token and expiration time
 	resp, err := http.Get(u.String())
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if resp.StatusCode > 400 {
-		return "", errors.New(string(body))
+		return nil, errors.New(string(body))
 	}
 
 	atk, err := parseAccessToken(string(body))

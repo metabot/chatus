@@ -112,7 +112,7 @@ var imgPshTmpl = template.Must(template.New("imgPsh").Parse(imgPshStr))
 var newsPllTmpl = template.Must(template.New("newsPll").Parse(newsPllStr))
 var newsPshTmpl = template.Must(template.New("newsPsh").Parse(newsPshStr))
 
-type header struct {
+type Header struct {
 	Id   uint64
 	From string
 	To   string
@@ -121,7 +121,7 @@ type header struct {
 }
 
 type TextMessage struct {
-	header
+	Header
 	Content string
 }
 
@@ -145,7 +145,7 @@ func (_ TextMessage) PushTemplate() *template.Template {
 }
 
 type ImageMessage struct {
-	header
+	Header
 	MediaId string
 }
 
@@ -158,7 +158,7 @@ func (_ ImageMessage) PushTemplate() *template.Template {
 }
 
 type VoiceMessage struct {
-	header
+	Header
 	MediaId string
 }
 
@@ -170,7 +170,7 @@ type Article struct {
 }
 
 type NewsMessage struct {
-	header
+	Header
 	Articles []Article
 }
 

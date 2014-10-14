@@ -1,25 +1,24 @@
 package main
 
 import (
+	"fmt"
+	. "github.com/metabot/chatus"
 	"github.com/zenazn/goji"
 	"github.com/zenazn/goji/web"
-	"net/http"
-	"fmt"
 	"log"
-	. "github.com/metabot/chatus"
+	"net/http"
 	"time"
 )
 
-
 //load Configuration for WeChat
-var ws = &WechatStation {
-		Id: "example",
-		Token: "foobar",
-		ApiAccess: ApiAccess{
-			Appid: "YOUR_APPID",
-			Secret: "YOUR_SeCRet",
-			ApiURL: "YOUR_APIURL",
-		},
+var ws = &WechatStation{
+	Id:    "example",
+	Token: "foobar",
+	ApiAccess: ApiAccess{
+		Appid:  "YOUR_APPID",
+		Secret: "YOUR_SeCRet",
+		ApiURL: "YOUR_APIURL",
+	},
 }
 
 func main() {
@@ -64,7 +63,6 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, r.FormValue("echostr"))
 }
 
-
 func receive(c web.C, w http.ResponseWriter, r *http.Request) {
 	s := c.Env["wechatStation"].(*WechatStation)
 
@@ -80,45 +78,40 @@ func receive(c web.C, w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, resp)
 }
 
-
 var (
 	EchoTxtMsgProcessor = &Processor{
-	Type: "text.",
-	Handle: func (i *InMessage) (string, error) {
-		//just echo
-		o, err := i.ToTxtMsg()
-		if err != nil {
-			return "", err
-		}
+		Type: "text.",
+		Handle: func(i *InMessage) (string, error) {
+			//just echo
+			o, err := i.ToTxtMsg()
+			if err != nil {
+				return "", err
+			}
 
-		o.To, o.From, o.Time = i.From, i.To, time.Now().Unix()
-		return ToPullResp(o)
-	},
-}
-
+			o.To, o.From, o.Time = i.From, i.To, time.Now().Unix()
+			return ToPullResp(o)
+		},
+	}
 
 	ClickEventProcessor = &Processor{
-	Type: "event.CLICK",
-	Handle: func (_ *InMessage) (string, error) {
-		return "", nil
-	},
-}
+		Type: "event.CLICK",
+		Handle: func(_ *InMessage) (string, error) {
+			return "", nil
+		},
+	}
 
-
-
-	DefaultProcessor = &Processor {
-	Type: "*",
-	Handle: func (i *InMessage) (string, error) {
-		tm := TextMessage{
-			Header {
-				From: i.To,
-				To:   i.From,
-				Time: time.Now().Unix(),
-				Type: "text"},
-			"暂不支持该功能",
-		}
-		return ToPullResp(tm)
-	},
-}
+	DefaultProcessor = &Processor{
+		Type: "*",
+		Handle: func(i *InMessage) (string, error) {
+			tm := TextMessage{
+				Header{
+					From: i.To,
+					To:   i.From,
+					Time: time.Now().Unix(),
+					Type: "text"},
+				"暂不支持该功能",
+			}
+			return ToPullResp(tm)
+		},
+	}
 )
-

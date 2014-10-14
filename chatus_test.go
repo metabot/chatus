@@ -5,13 +5,27 @@ import (
 	"time"
 )
 
+var DefaultProcessor = &Processor{
+	Type: "*",
+	Handle: func(i *InMessage) (string, error) {
+		tm := TextMessage{
+			Header{
+				From: i.To,
+				To:   i.From,
+				Time: time.Now().Unix(),
+				Type: "text"},
+			"暂不支持该功能",
+		}
+		return ToPullResp(tm)
+	},
+}
 
 func TestValidate(t *testing.T) {
 
 	s := &WechatStation{
 		defaultProcessor: DefaultProcessor,
-		id: "test",
-		token: "foobar",
+		Id:               "test",
+		Token:            "foobar",
 	}
 
 	err := s.IsValid("1232234123451", "adav2341asdf=-eq", "720fd5568eabf4cb9f9bd81dea494880d138253a")
@@ -25,7 +39,6 @@ func TestValidate(t *testing.T) {
 	}
 
 }
-
 
 func TestParseAccessToke(t *testing.T) {
 
@@ -44,14 +57,13 @@ func TestParseAccessToke(t *testing.T) {
 		t.Fatal("expected: 7200 actual:", atk.ExpiresIn)
 	}
 
-	future := time.Now().Add(time.Duration(7000)*time.Second)
+	future := time.Now().Add(time.Duration(7000) * time.Second)
 	if !atk.ExpiresAt.After(future) {
 		t.Fatal("wrong expiration time")
 	}
 
-	future = time.Now().Add(time.Duration(7500)*time.Second)
+	future = time.Now().Add(time.Duration(7500) * time.Second)
 	if atk.ExpiresAt.After(future) {
 		t.Fatal("wrong expiration time")
 	}
 }
-

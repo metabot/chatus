@@ -1,37 +1,34 @@
 package chatus
 
 import (
-	"time"
-	"github.com/metabot/utils"
-	"io"
-	"log"
 	"encoding/json"
-	"net/url"
-	"strings"
-	"net/http"
-	"io/ioutil"
 	"errors"
 	"fmt"
+	"github.com/metabot/utils"
+	"io"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
 )
 
-
 type WechatStation struct {
-	processors map[string]*Processor
+	processors       map[string]*Processor
 	defaultProcessor *Processor
-	Id string
-	Token string
+	Id               string
+	Token            string
 	ApiAccess
 }
 
-
 func (s *WechatStation) AddProcessor(processor *Processor) {
-	if (s.processors == nil) {
-		s.processors = make (map[string]*Processor)
+	if s.processors == nil {
+		s.processors = make(map[string]*Processor)
 	}
 
 	s.processors[processor.Type] = processor
 }
-
 
 func (s *WechatStation) IsValid(timestamp string, nonce string, signature string) error {
 	if signature == utils.GenerateSignature(timestamp, nonce, s.Token) {
@@ -40,9 +37,8 @@ func (s *WechatStation) IsValid(timestamp string, nonce string, signature string
 	return utils.ErrInvalidRequest
 }
 
-
 //process incoming message and generate response in string
-func (s *WechatStation) Process(in io.Reader) (string ,error) {
+func (s *WechatStation) Process(in io.Reader) (string, error) {
 	//parse to InMessage
 	msg, err := ParseInMessage(in)
 	if err != nil {
@@ -63,36 +59,33 @@ func processorKey(m *InMessage) string {
 	return strings.Join(ks, ".")
 }
 
-
 //Processor to process one type of message/event
 // Type:  {{InMessage.Type}}.{{InMessage.Event}}
 type Processor struct {
-	Type string
-	Handle  func(*InMessage) (string, error)
+	Type   string
+	Handle func(*InMessage) (string, error)
 }
-
 
 type pushResp struct {
 	Errcode int    `json:"errcode"`
-	Errmsg  string  `json:"errmsg"`
+	Errmsg  string `json:"errmsg"`
 }
 
 type ApiAccess struct {
-	Appid   string
-	Secret  string
-	ApiURL  string
+	Appid       string
+	Secret      string
+	ApiURL      string
 	AccessToken *accessToken
 }
 
 type accessToken struct {
 	Token     string `json:"access_token"`
-	ExpiresIn int  `json:"expires_in"`
+	ExpiresIn int    `json:"expires_in"`
 	ExpiresAt time.Time
 }
 
-
 func (s *WechatStation) accessToken() (*accessToken, error) {
-	if s.AccessToken!= nil && s.AccessToken.ExpiresAt.After(time.Now()) {
+	if s.AccessToken != nil && s.AccessToken.ExpiresAt.After(time.Now()) {
 		return s.AccessToken, nil
 	}
 
@@ -142,8 +135,6 @@ func parseAccessToken(in string) (*accessToken, error) {
 	return atk, nil
 }
 
-
-
 func (s *WechatStation) Send(data string) error {
 	at, err := s.accessToken()
 	if err != nil {
@@ -176,5 +167,3 @@ func (s *WechatStation) Send(data string) error {
 
 	return nil
 }
-
-

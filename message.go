@@ -5,9 +5,9 @@ import (
 	"encoding/xml"
 	"errors"
 	"io"
-	"text/template"
 	"regexp"
 	"strconv"
+	"text/template"
 )
 
 type Pullable interface {
@@ -73,7 +73,6 @@ func ParseInMessage(r io.Reader) (*InMessage, error) {
 
 	return msg, nil
 }
-
 
 const (
 	basePllStr = `<ToUserName>{{.To}}</ToUserName><FromUserName>{{.From}}</FromUserName>` +
@@ -213,10 +212,9 @@ func (msg *InMessage) ToGeoEvent() (*GeoEvent, error) {
 	return ge, nil
 }
 
-
 type SubscribeEvent struct {
 	UId string
-	Key int  //channel keys
+	Key int //channel keys
 }
 
 var reSubKey = regexp.MustCompile("qrscene_([0-9]+)$")
@@ -234,19 +232,17 @@ func (msg *InMessage) ToSubscribeEvent() (*SubscribeEvent, error) {
 		//parse the event key
 		matches := reSubKey.FindStringSubmatch(msg.EventKey)
 		if len(matches) == 2 {
-			se.Key,_ = strconv.Atoi(matches[1])
+			se.Key, _ = strconv.Atoi(matches[1])
 		}
 	}
 
 	return se, nil
 }
 
-
 type ScanEvent struct {
 	UId string
 	Key int
 }
-
 
 func (msg *InMessage) ToScanEvent() (*ScanEvent, error) {
 	if msg.Event != "SCAN" {
@@ -258,11 +254,10 @@ func (msg *InMessage) ToScanEvent() (*ScanEvent, error) {
 	se.UId, se.Key = msg.From, 0
 
 	//parse the event key
-	se.Key,_ = strconv.Atoi(msg.EventKey)
+	se.Key, _ = strconv.Atoi(msg.EventKey)
 
 	return se, nil
 }
-
 
 type ViewEvent struct {
 	UId string
